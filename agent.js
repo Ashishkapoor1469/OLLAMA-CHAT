@@ -2,6 +2,7 @@ import Ollama from "ollama";
 import readline from "readline";
 import { exec } from "child_process";
 import { promisify } from "util";
+import { access } from "fs";
 
 const execAsync = promisify(exec);
 
@@ -10,7 +11,7 @@ const tools = [
     type: "function",
     function: {
       name: "run_command",
-      description: "Runs shell command and Return the Output",
+      description: "Runs shell command and Return the Output.",
       parameters: {
         type: "object",
         properties: {
@@ -42,7 +43,7 @@ const tools = [
     function: {
       name: "write_file",
       description:
-        "write content to a file. use to create files and use to create file inside a givened folder [eg ./home/filename.txt]. On current directory if path is not given.",
+        "write content and plan to a file. On current directory if path is not given.",
       parameters: {
         type: "object",
         properties: {
@@ -64,16 +65,48 @@ const tools = [
     function: {
       name: "mk_folder",
       description:
-        "make folders on current directory and folders in side a folder[eg. ./home/src] . and don't use to create file.On current directory if path is not given.",
+        "Create or delete a folder. Supports nested paths like a/b/c. Deleteing removes all contents inside.",
       parameters: {
         type: "object",
         properties: {
+          action: {
+            type: "string",
+            enum: ["create", "delete"],
+            discription: "'create' or 'delete'",
+          },
           path: {
             type: "string",
-            description: "name of the folder",
+            discription: "Path of the folder",
           },
         },
-        required: ["path"],
+        required: ["action", "path"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "mk_file",
+      description:
+        "Create or Delete a file or files. Creating a file also creates any parent folders needed.",
+      parameters: {
+        type: "object",
+        properties: {
+          action: {
+            type: "string",
+            enum: ["create", "delete"],
+            discription: "'create' or 'delete'",
+          },
+          path: {
+            type: "string",
+            discription: "Path of the file.",
+          },
+          content: {
+            type: "string",
+            discription: "Optional content when createing a file",
+          },
+        },
+        required: ["action", "path"],
       },
     },
   },
@@ -110,11 +143,43 @@ async function write_file({ path, content }) {
   }
 }
 
-async function mk_folder({ path }) {
-  const { mkdir } = await import("fs/promises");
+async function mk_folder({ action, path }) {
+  const { mkdir, rm } = await import("fs/promises");
   try {
-    await mkdir(path, { recursive: true });
-    return `Successfully created folder to ${path}`;
+    if (action === "create") {
+      try {
+        await access(path);
+        return `Already Created folder to ${path}`;
+      } catch (error) {}
+      await mkdir(path, { recursive: true });
+      return `Successfully created folder to ${path}`;
+    } else if (action === "delete") {
+      await rm(path, { recursive: true, force: true });
+      return `Successfully delete folder to ${path}`;
+    }
+    return `mk_folder: ${(action, path)}`;
+  } catch (error) {
+    return `Error read_file: ${error.message}`;
+  }
+}
+async function mk_file({ action, path, content }) {
+  const { writeFile, unlink, mkdir } = await import("fs/promises");
+  const { dirname } = await import("path");
+
+  try {
+    if (action === "create") {
+      try {
+        await access(path);
+        return `Already created file to ${path}`;
+      } catch (error) {}
+      await mkdir(dirname(path), { recursive: true });
+      await writeFile(path, content, "utf-8");
+      return `Successfully created file to ${path}`;
+    } else if (action === "delete") {
+      await unlink(path);
+      return `Successfully delete file to ${path}`;
+    }
+    return `mk_file: ${(action, path)}`;
   } catch (error) {
     return `Error read_file: ${error.message}`;
   }
@@ -125,6 +190,7 @@ const toolHandlers = {
   read_file,
   write_file,
   mk_folder,
+  mk_file,
 };
 
 async function agent(userMessage, history = []) {
@@ -138,7 +204,7 @@ async function agent(userMessage, history = []) {
     }, 80);
 
     const response = await Ollama.chat({
-      model: "qwen3:0.6b",
+      model: "minimax-m2.5:cloud",
       messages: history,
       tools,
     });
@@ -147,12 +213,13 @@ async function agent(userMessage, history = []) {
     process.stdout.write("\r                \r"); // clear the loader line
     const message = response.message;
     history.push(message);
+
     //if no tool call
     if (!message.tool_calls || message.tool_calls.length === 0) {
       history.pop();
       process.stdout.write("\n🤖Bot: ");
       const stream = await Ollama.chat({
-        model: "qwen3:0.6b",
+        model: "minimax-m2.5:cloud",
         messages: history,
         stream: true,
       });
@@ -174,7 +241,7 @@ async function agent(userMessage, history = []) {
         process.stdout.write(token);
       }
       process.stdout.write("\n");
-      history.push({ role: "assistant", content: fullReply });
+      history.push({ role: "system", content: fullReply });
       return;
     }
 
@@ -205,7 +272,7 @@ const history = [
   {
     role: "system",
     content:
-      "you are a helpful assistant with access to shell commands ,file reading, writing and make folder. Use these tools to help the user accomplish tasks. always explain what you're doing.",
+      "you are a helpful Coding Agent.You also have access to Create and delete file and folder also read and wirte in file.Also have access of commands shell",
   },
 ];
 

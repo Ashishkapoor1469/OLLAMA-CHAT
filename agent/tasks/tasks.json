@@ -1,1 +1,42 @@
-[]
+[
+  {
+    "id": 1773152527619,
+    "task": "create_folder project",
+    "done": true
+  },
+  {
+    "id": 1773152527624,
+    "task": "\"write_file project/index.html\"",
+    "done": true
+  },
+  {
+    "id": 1773152527627,
+    "task": "\"write_file project/style.css\"",
+    "done": true
+  },
+  {
+    "id": 1773152527632,
+    "task": "\"write_file project/script.js\"",
+    "done": true
+  },
+  {
+    "id": 1773152813293,
+    "task": "create_folder project",
+    "done": false
+  },
+  {
+    "id": 1773152813298,
+    "task": "\"write_file project/index.html\"",
+    "done": false
+  },
+  {
+    "id": 1773152813301,
+    "task": "\"write_file project/style.css\"",
+    "done": false
+  },
+  {
+    "id": 1773152813304,
+    "task": "\"write_file project/script.js\"",
+    "done": false
+  }
+]

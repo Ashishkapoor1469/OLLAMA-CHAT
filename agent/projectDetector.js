@@ -2,11 +2,15 @@ export function detectProjectType(goal) {
   const text = goal.toLowerCase();
 
   if (text.includes("next") || text.includes("nextjs")) {
-    return "next";
+    return { s: "next", text: text };
+  }
+
+  if (text.includes("js")) {
+    return { s: "js", text: text };
   }
 
   if (text.includes("react")) {
-    return "react";
+    return { s: "react", text: text };
   }
 
   if (
@@ -14,7 +18,7 @@ export function detectProjectType(goal) {
     text.includes("express") ||
     text.includes("api")
   ) {
-    return "node";
+    return { s: "node", text: text };
   }
 
   if (
@@ -23,8 +27,8 @@ export function detectProjectType(goal) {
     text.includes("javascript") ||
     text.includes("simple")
   ) {
-    return "vanilla";
+    return { s: "vanilla", text: text };
   }
 
-  return "vanilla";
+  return { s: "vanilla", text: text };
 }

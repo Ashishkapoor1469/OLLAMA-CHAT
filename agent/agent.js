@@ -13,7 +13,7 @@ import { shellTool, handleShellTool } from "./tools/shellTool.js";
 import { startFolderChecker } from "./folderChecker.js";
 
 import { logStep, logDone } from "./utils/logger.js";
-
+import { memory } from "./utils/memorysave.js";
 startFolderChecker();
 
 const tools = [fileTool, folderTool, shellTool];
@@ -35,8 +35,6 @@ async function runAgent(goal) {
     if (!task) {
       logDone("All tasks completed");
       await clearTasks();
-
-      rl.close();
       return;
     }
 
@@ -45,7 +43,8 @@ async function runAgent(goal) {
     const messages = [
       {
         role: "system",
-        content: "You are an autonomous coding agent.",
+        content:
+          "You are an autonomous coding agent.",
       },
       {
         role: "user",
@@ -54,7 +53,6 @@ async function runAgent(goal) {
     ];
 
     const msg = await askLLM(messages, tools);
-
     if (msg.tool_calls) {
       for (const call of msg.tool_calls) {
         const name = call.function.name;
