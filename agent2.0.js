@@ -305,7 +305,7 @@ async function agent(userInput, history) {
 
   while (true) {
     const response = await Ollama.chat({
-      model: "qwen3:0.6b",
+      model: "gpt-oss:120b-cloud",
       messages: history,
       tools,
     });

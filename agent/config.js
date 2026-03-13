@@ -1,4 +1,4 @@
-export const MODEL = "qwen3:0.6b";
+export const MODEL = "gpt-oss:120b-cloud";
 
 export const CHECK_INTERVAL = 10000;
 

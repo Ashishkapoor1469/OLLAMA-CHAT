@@ -204,7 +204,7 @@ async function agent(userMessage, history = []) {
     }, 80);
 
     const response = await Ollama.chat({
-      model: "minimax-m2.5:cloud",
+      model: "gpt-oss:120b-cloud",
       messages: history,
       tools,
     });
@@ -219,7 +219,7 @@ async function agent(userMessage, history = []) {
       history.pop();
       process.stdout.write("\n🤖Bot: ");
       const stream = await Ollama.chat({
-        model: "minimax-m2.5:cloud",
+        model: "gpt-oss:120b-cloud",
         messages: history,
         stream: true,
       });
